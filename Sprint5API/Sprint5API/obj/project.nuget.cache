@@ -1,10 +1,11 @@
 {
   "version": 2,
-  "dgSpecHash": "HCCsY7C7XFBWeP1Q3F1T08XoDpjn18xi11UVjqWWzdkgrB+49CQvwnKTmMIwt7tpveQ0MHWsfErfwKjWF+N4pw==",
+  "dgSpecHash": "k8BwbCANsstCl037Vxrg5DfH4uWgyVV5N2NILI1j6ze63w7gycundxGhARTvefh1dGv+lOegDFIwgemgLIEA8g==",
   "success": true,
   "projectFilePath": "C:\\Users\\cassi\\Documents\\github\\avaliacao-sprint-5\\Sprint5API\\Sprint5API\\Sprint5API.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\cassi\\.nuget\\packages\\automapper\\10.1.1\\automapper.10.1.1.nupkg.sha512",
+    "C:\\Users\\cassi\\.nuget\\packages\\automapper.extensions.microsoft.dependencyinjection\\8.1.1\\automapper.extensions.microsoft.dependencyinjection.8.1.1.nupkg.sha512",
     "C:\\Users\\cassi\\.nuget\\packages\\fluentvalidation\\10.3.3\\fluentvalidation.10.3.3.nupkg.sha512",
     "C:\\Users\\cassi\\.nuget\\packages\\humanizer.core\\2.8.26\\humanizer.core.2.8.26.nupkg.sha512",
     "C:\\Users\\cassi\\.nuget\\packages\\microsoft.csharp\\4.7.0\\microsoft.csharp.4.7.0.nupkg.sha512",

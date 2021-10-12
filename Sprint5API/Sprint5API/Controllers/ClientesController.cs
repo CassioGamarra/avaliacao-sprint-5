@@ -59,7 +59,7 @@ namespace Sprint5API.Controllers
                 Cidade cidade = _mapper.Map<Cidade>(cidadeDTO);
 
                 if (cidadeDTO == null)
-                {
+                { 
                     cidadeDTO = new CidadeDTO();  
                     cidadeDTO.Nome = viaCepDTO.localidade;
                     cidadeDTO.Estado = viaCepDTO.uf;
@@ -72,11 +72,17 @@ namespace Sprint5API.Controllers
 
                 Cliente cliente = _mapper.Map<Cliente>(clienteDTO);
 
+                Console.WriteLine(cidade.Id);
+                Console.WriteLine(cidade.Nome);
+
                 cliente.CidadeId = cidade.Id;
-                cliente.Cidade = cidade; 
+                //cliente.Cidade = cidade; 
 
                 _context.Clientes.Add(cliente);
                 _context.SaveChanges();
+
+                Console.WriteLine(cidade.Id);
+                Console.WriteLine(cidade.Nome);
 
                 return CreatedAtAction(nameof(BuscarPorId), new { Id = cliente.Id }, cliente);
             }
@@ -85,8 +91,14 @@ namespace Sprint5API.Controllers
 
         [HttpGet]
         public IActionResult BuscarTodos()
-        {
-            return Ok(_context.Cidades);
+        { 
+            List<ClienteDTO> clienteDTO = new List<ClienteDTO>();
+            foreach (Cliente cliente in _context.Clientes)
+            {
+                clienteDTO.Add(_mapper.Map<ClienteDTO>(cliente));
+            }
+
+            return Ok(clienteDTO);
         }
 
         [HttpGet("{id}")]
