@@ -1,9 +1,13 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Sprint5API.Data;
+using Sprint5API.DTOs;
 using Sprint5API.Models;
+using Sprint5API.Validators;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using System.Collections.Generic; 
+using FluentValidation.Results;
+using System.Linq; 
+using AutoMapper;
 
 namespace Sprint5API.Controllers
 {
@@ -11,35 +15,127 @@ namespace Sprint5API.Controllers
     [Route("[controller]")]
     public class CidadesController : ControllerBase
     {
+
+        private DatabaseContext _context;
+        private IMapper _mapper;
+
+        public CidadesController(DatabaseContext context, IMapper mapper)
+        {
+            _context = context;
+            _mapper = mapper;
+        }
+
         [HttpPost]
-        public void Adicionar([FromBody] Cidade cidade)
+        public IActionResult Adicionar([FromBody] CidadeDTO cidadeDTO)
         {
-            Console.WriteLine(cidade.Nome);
-            Console.WriteLine(cidade.Estado);
+            var cidadeValidator = new CidadeValidator();
+            ValidationResult result = cidadeValidator.Validate(cidadeDTO);
+            IList<ValidationFailure> erros = result.Errors;
+            if (!result.IsValid) 
+            {
+                return BadRequest(erros);
+            }
+
+
+            CidadeDTO cidadeCadastrada = BuscarPorCidadeEstado(cidadeDTO.Nome, cidadeDTO.Estado);
+            if (cidadeCadastrada == null) 
+            {
+                Cidade cidade = _mapper.Map<Cidade>(cidadeDTO); 
+                _context.Cidades.Add(cidade);
+                _context.SaveChanges();
+                return CreatedAtAction(nameof(BuscarPorId), new { Id = cidade.Id }, cidade);
+            }
+            return BadRequest( new { Mensagem = "Cidade já cadastrada!", Erro = true });
+            
         }
 
         [HttpGet]
-        public void BuscarTodos()
+        public IActionResult BuscarTodos()
         {
+            List<CidadeDTO> cidadeDTO = new List<CidadeDTO>();
+            foreach (Cidade cidade in _context.Cidades) 
+            {
+                cidadeDTO.Add(_mapper.Map<CidadeDTO>(cidade));
+            }
+
+            return Ok(cidadeDTO);
+        }
+
+        [HttpGet("{id}")]
+        public IActionResult BuscarPorId(Guid id)
+        {
+            Cidade cidade = _context.Cidades.FirstOrDefault(cidade => cidade.Id == id);
+
+            if (cidade != null) 
+            {
+                CidadeDTO cidadeDTO = _mapper.Map<CidadeDTO>(cidade);
+                return Ok(cidadeDTO);
+            }
+
+            return NotFound(new { Mensagem = "Cidade não encontrada!", Erro = true });
+        }
+
+        /*
+         Verifica se já existe a cidade informada por CEP
+         */
+        public CidadeDTO BuscarPorCidadeEstado(string nome, string estado)
+        {
+            Cidade cidade = _context.Cidades.FirstOrDefault(cidade => cidade.Nome == nome && cidade.Estado == estado);
+            if (cidade != null)
+            {
+                CidadeDTO cidadeDTO = _mapper.Map<CidadeDTO>(cidade);
+                return cidadeDTO;
+            }
+            return null;
+        }
+
+        [HttpPut("{id}")]
+        public IActionResult Atualizar(Guid id, [FromBody] CidadeDTO cidadeDTO)
+        {
+            var cidadeValidator = new CidadeValidator();
+            ValidationResult resultado = cidadeValidator.Validate(cidadeDTO);
+            IList<ValidationFailure> erros = resultado.Errors;
+            if(!resultado.IsValid)
+            {
+                return BadRequest(erros);
+            }
+
+
+            Cidade cidade = _context.Cidades.FirstOrDefault(cidade => cidade.Id == id);
+            if (cidade == null) 
+            {
+                return NotFound();   
+            }
+
+            if(cidade.Nome == cidade.Nome && cidade.Estado == cidade.Estado)
+            {
+                return Ok("Nenhuma alteração realizada!");
+            }
+
+            CidadeDTO cidadeCadastrada = BuscarPorCidadeEstado(cidade.Nome, cidade.Estado);
+
+            if (cidadeCadastrada != null)
+            {
+                return BadRequest("Cidade já cadastrada!");
+            }
+
+            _mapper.Map(cidadeDTO, cidade);
+            _context.SaveChanges();
+            return Ok("Atualizado com sucesso!");
 
         }
 
-        [HttpGet]
-        public void BuscarPorId(Guid guid)
+        [HttpDelete("{id}")]
+        public IActionResult Excluir(Guid id)
         {
-
-        }
-
-        [HttpPut]
-        public void Editar(Guid guid)
-        {
-
-        }
-
-        [HttpDelete]
-        public void Excluir(Guid guid)
-        {
-
+            Cidade cidade = _context.Cidades.FirstOrDefault(cidade => cidade.Id == id);
+            if(cidade == null)
+            {
+                return NotFound();
+            }
+            _context.Remove(cidade);
+            _context.SaveChanges();
+            return Ok("Cidade removida com sucesso!");
         }
     }
 }
