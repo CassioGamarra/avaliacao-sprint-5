@@ -10,7 +10,7 @@ using System.Linq;
 using AutoMapper;
 using System.Net.Http;
 using Newtonsoft.Json;
-using System.Threading.Tasks;
+using System.Threading.Tasks; 
 
 namespace Sprint5API.Controllers
 {
@@ -29,13 +29,24 @@ namespace Sprint5API.Controllers
 
         [HttpPost]
         public async Task<IActionResult> Adicionar([FromBody] ClienteDTO clienteDTO)
-        { 
-            ViaCepDTO viaCepDTO = await BuscarCidadePorCep(clienteDTO.Cep); 
+        {
+            var viaCepValidator = new ViaCepValidator();
+            ValidationResult resultado = viaCepValidator.Validate(clienteDTO);
+            IList<ValidationFailure> erros = resultado.Errors;
+
+            if (!resultado.IsValid)
+            {
+                return BadRequest(erros);
+            }
+
+            ViaCepDTO viaCepDTO = await BuscarCidadePorCep(clienteDTO.Cep);
 
             if(viaCepDTO != null)
             {
                 CidadesController cidadesController = new CidadesController(_context, _mapper);
-                CidadeDTO cidadeDTO = cidadesController.BuscarPorCidadeEstado(viaCepDTO.localidade, viaCepDTO.uf); 
+                CidadeDTO cidadeDTO = cidadesController.BuscarPorCidadeEstado(viaCepDTO.localidade, viaCepDTO.uf);
+
+                clienteDTO.Cep = clienteDTO.Cep.Replace("-", "").Trim();
 
                 if (!string.IsNullOrEmpty(viaCepDTO.logradouro))
                 {
@@ -47,15 +58,16 @@ namespace Sprint5API.Controllers
                     clienteDTO.Bairro = viaCepDTO.bairro;
                 }
 
+                clienteDTO.DataNascimento = DateTime.Parse(clienteDTO.DataNascimento.ToString());
+
                 var clientValidator = new ClienteValidator();
-                ValidationResult resultado = clientValidator.Validate(clienteDTO);
-                IList<ValidationFailure> erros = resultado.Errors;
+                resultado = clientValidator.Validate(clienteDTO);
+                erros = resultado.Errors;
                 if (!resultado.IsValid)
                 {
                     return BadRequest(erros);
                 }
-
-
+                 
                 Cidade cidade = _mapper.Map<Cidade>(cidadeDTO);
 
                 if (cidadeDTO == null)
@@ -69,24 +81,16 @@ namespace Sprint5API.Controllers
                     _context.Cidades.Add(cidade);
                     _context.SaveChanges();
                 }
+                clienteDTO.CidadeId = cidade.Id; 
 
                 Cliente cliente = _mapper.Map<Cliente>(clienteDTO);
 
-                Console.WriteLine(cidade.Id);
-                Console.WriteLine(cidade.Nome);
-
-                cliente.CidadeId = cidade.Id;
-                //cliente.Cidade = cidade; 
-
                 _context.Clientes.Add(cliente);
                 _context.SaveChanges();
-
-                Console.WriteLine(cidade.Id);
-                Console.WriteLine(cidade.Nome);
-
+                 
                 return CreatedAtAction(nameof(BuscarPorId), new { Id = cliente.Id }, cliente);
             }
-            return NotFound();
+            return NotFound("Ocorreu um erro ao pesquisar o CEP");
         }
 
         [HttpGet]
@@ -119,9 +123,10 @@ namespace Sprint5API.Controllers
         public async Task<IActionResult> Atualizar(Guid id, [FromBody] ClienteDTO clienteDTO)
         {  
             Cliente cliente = _context.Clientes.FirstOrDefault(cliente => cliente.Id == id);
+              
             if (cliente == null)
             {
-                return NotFound();
+                return NotFound("Cliente não encontrado!");
             }
 
             if (cliente.Nome == clienteDTO.Nome && cliente.DataNascimento == clienteDTO.DataNascimento && cliente.Cep == clienteDTO.Cep && cliente.Logradouro == clienteDTO.Logradouro && cliente.Bairro == clienteDTO.Bairro)
@@ -129,7 +134,7 @@ namespace Sprint5API.Controllers
                 return Ok("Nenhuma alteração realizada!");
             } 
 
-            ViaCepDTO viaCepDTO = await BuscarCidadePorCep(clienteDTO.Cep);
+            ViaCepDTO viaCepDTO = await BuscarCidadePorCep(clienteDTO.Cep); 
 
             if (viaCepDTO != null)
             {
@@ -158,8 +163,8 @@ namespace Sprint5API.Controllers
                 Cidade cidade = _mapper.Map<Cidade>(cidadeDTO);
 
                 if (cidadeDTO == null)
-                {
-                    cidadeDTO = new CidadeDTO();
+                { 
+                    cidadeDTO = new CidadeDTO();  
                     cidadeDTO.Nome = viaCepDTO.localidade;
                     cidadeDTO.Estado = viaCepDTO.uf;
 
@@ -167,17 +172,19 @@ namespace Sprint5API.Controllers
 
                     _context.Cidades.Add(cidade);
                     _context.SaveChanges();
-                }
+                } 
 
-                cliente.CidadeId = cidade.Id;
-                cliente.Cidade = cidade;
+                clienteDTO.Id = cliente.Id;
+                clienteDTO.Cidade = cliente.Cidade;
+                clienteDTO.CidadeId = cidade.Id;
 
-                _mapper.Map<Cliente>(clienteDTO); 
+                _mapper.Map(clienteDTO, cliente);
+                _context.Update(cliente); 
                 _context.SaveChanges();
 
                 return Ok("Cliente atualizado(a) com sucesso!"); ;
             }
-            return NotFound();
+            return NotFound("Ocorreu um erro ao pesquisar o CEP");
         }
 
         [HttpDelete("{id}")]
@@ -186,8 +193,8 @@ namespace Sprint5API.Controllers
             Cliente cliente = _context.Clientes.FirstOrDefault(cliente => cliente.Id == id);
             if (cliente == null)
             {
-                return NotFound();
-            }
+                return NotFound("Cliente não encontrado!");
+            } 
             _context.Remove(cliente);
             _context.SaveChanges();
             return Ok("Cliente removido(a) com sucesso!");
@@ -200,11 +207,19 @@ namespace Sprint5API.Controllers
             httpClient.BaseAddress = new Uri("https://viacep.com.br/ws/");
 
             HttpResponseMessage resposta = await httpClient.GetAsync($"{cep}/json");
-            resposta.EnsureSuccessStatusCode();
-
-            ViaCepDTO viaCepDTO = JsonConvert.DeserializeObject<ViaCepDTO>(await resposta.Content.ReadAsStringAsync());
-
-            return viaCepDTO;
+            
+            if(resposta.StatusCode == System.Net.HttpStatusCode.OK)
+            {
+                ViaCepDTO viaCepDTO = JsonConvert.DeserializeObject<ViaCepDTO>(await resposta.Content.ReadAsStringAsync());
+                
+                if(viaCepDTO.erro == true)
+                {
+                    return null;
+                }
+                
+                return viaCepDTO;
+            }
+            return null;
         }
 
     }

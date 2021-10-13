@@ -17,12 +17,12 @@ namespace Sprint5API.Configuration
             builder.Property(cliente => cliente.CidadeId).IsRequired().HasColumnName("CidadeId");
             builder.Property(cliente => cliente.Cep).IsRequired();
             builder.Property(cliente => cliente.Logradouro).IsRequired();
-            builder.Property(cliente => cliente.Bairro).IsRequired();
-            builder.Property<Guid>("CidadeId").IsRequired();
+            builder.Property(cliente => cliente.Bairro).IsRequired(); 
 
             builder.HasOne(cidade => cidade.Cidade)
                 .WithMany(cliente => cliente.Clientes)
-                .HasForeignKey(cidade => cidade.Id);
+                .HasForeignKey(cliente => cliente.CidadeId)
+                .HasPrincipalKey(cidade => cidade.Id);
         }
     }
 }

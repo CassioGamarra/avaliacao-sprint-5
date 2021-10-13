@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Sprint5API.Configuration;
 using Sprint5API.Models; 
 
 namespace Sprint5API.Data
@@ -12,5 +13,11 @@ namespace Sprint5API.Data
         {
 
         }  
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.ApplyConfiguration(new CidadeConfiguration());
+            modelBuilder.ApplyConfiguration(new ClienteConfiguration());
+        }
     }
 }

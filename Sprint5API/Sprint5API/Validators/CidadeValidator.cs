@@ -1,5 +1,4 @@
-﻿using System; 
-using FluentValidation;
+﻿using FluentValidation;
 using Sprint5API.DTOs;
 
 namespace Sprint5API.Validators

@@ -107,19 +107,20 @@ namespace Sprint5API.Controllers
                 return NotFound();   
             }
 
-            if(cidade.Nome == cidade.Nome && cidade.Estado == cidade.Estado)
+            if(cidadeDTO.Nome == cidade.Nome && cidadeDTO.Estado == cidade.Estado)
             {
                 return Ok("Nenhuma alteração realizada!");
             }
 
-            CidadeDTO cidadeCadastrada = BuscarPorCidadeEstado(cidade.Nome, cidade.Estado);
+            CidadeDTO cidadeCadastrada = BuscarPorCidadeEstado(cidadeDTO.Nome, cidadeDTO.Estado);
 
             if (cidadeCadastrada != null)
             {
                 return BadRequest("Cidade já cadastrada!");
             }
-
+            cidadeDTO.Id = cidade.Id;        
             _mapper.Map(cidadeDTO, cidade);
+            _context.Update(cidade);
             _context.SaveChanges();
             return Ok("Atualizado com sucesso!");
 
@@ -131,11 +132,19 @@ namespace Sprint5API.Controllers
             Cidade cidade = _context.Cidades.FirstOrDefault(cidade => cidade.Id == id);
             if(cidade == null)
             {
-                return NotFound();
+                return NotFound("Cidade não encontrada!");
             }
-            _context.Remove(cidade);
-            _context.SaveChanges();
-            return Ok("Cidade removida com sucesso!");
+
+            try
+            {
+                _context.Remove(cidade);
+                _context.SaveChanges();
+
+                return Ok("Cidade removida com sucesso!");
+            } catch(Exception e)
+            { 
+                return BadRequest("Ocorreu um erro ao excluir a cidade");
+            } 
         }
     }
 }

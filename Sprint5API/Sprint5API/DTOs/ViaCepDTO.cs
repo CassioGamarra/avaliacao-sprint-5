@@ -1,6 +1,4 @@
-﻿using System; 
-
-namespace Sprint5API.DTOs
+﻿namespace Sprint5API.DTOs
 {
     public class ViaCepDTO
     {
@@ -14,5 +12,7 @@ namespace Sprint5API.DTOs
         public int? gia { get; set; }
         public int? ddd { get; set; }
         public int? siafi { get; set; }
+
+        public bool? erro { get; set; }
     }
 }
