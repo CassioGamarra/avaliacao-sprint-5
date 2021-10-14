@@ -1,4 +1,5 @@
-﻿using System; 
+﻿using System;
+using System.Collections.Generic;
 
 namespace Sprint5API.DTOs
 {
@@ -6,6 +7,7 @@ namespace Sprint5API.DTOs
     {
         public Guid Id { get; set; }
         public string Nome { get; set; }
-        public string Estado { get; set; } 
+        public string Estado { get; set; }
+        public IList<ClienteDTO> Clientes { get; set; }
     }
 }

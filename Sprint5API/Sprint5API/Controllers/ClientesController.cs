@@ -10,7 +10,8 @@ using System.Linq;
 using AutoMapper;
 using System.Net.Http;
 using Newtonsoft.Json;
-using System.Threading.Tasks; 
+using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 
 namespace Sprint5API.Controllers
 {
@@ -97,7 +98,10 @@ namespace Sprint5API.Controllers
         public IActionResult BuscarTodos()
         { 
             List<ClienteDTO> clienteDTO = new List<ClienteDTO>();
-            foreach (Cliente cliente in _context.Clientes)
+
+            List<Cliente> clientes = _context.Clientes.Include(cliente => cliente.Cidade).ToList(); 
+
+            foreach (Cliente cliente in clientes)
             {
                 clienteDTO.Add(_mapper.Map<ClienteDTO>(cliente));
             }
@@ -108,7 +112,7 @@ namespace Sprint5API.Controllers
         [HttpGet("{id}")]
         public IActionResult BuscarPorId(Guid id)
         {
-            Cliente cliente = _context.Clientes.FirstOrDefault(cliente => cliente.Id == id);
+            Cliente cliente = _context.Clientes.Include(cliente => cliente.Cidade).ToList().FirstOrDefault(cliente => cliente.Id == id);
 
             if(cliente != null)
             {

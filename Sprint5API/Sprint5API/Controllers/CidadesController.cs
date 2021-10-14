@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using FluentValidation.Results;
 using System.Linq; 
 using AutoMapper;
+using Microsoft.EntityFrameworkCore;
 
 namespace Sprint5API.Controllers
 {
@@ -53,8 +54,9 @@ namespace Sprint5API.Controllers
         public IActionResult BuscarTodos()
         {
             List<CidadeDTO> cidadeDTO = new List<CidadeDTO>();
-            foreach (Cidade cidade in _context.Cidades) 
-            {
+            var cidades = _context.Cidades.Include("Clientes").ToList();
+            foreach (Cidade cidade in cidades)
+            { 
                 cidadeDTO.Add(_mapper.Map<CidadeDTO>(cidade));
             }
 
@@ -64,7 +66,7 @@ namespace Sprint5API.Controllers
         [HttpGet("{id}")]
         public IActionResult BuscarPorId(Guid id)
         {
-            Cidade cidade = _context.Cidades.FirstOrDefault(cidade => cidade.Id == id);
+            Cidade cidade = _context.Cidades.Include("Clientes").FirstOrDefault(cidade => cidade.Id == id);
 
             if (cidade != null) 
             {
