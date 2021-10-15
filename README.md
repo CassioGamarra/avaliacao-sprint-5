@@ -4,7 +4,7 @@ Avaliação Sprint 5 - Programa de Bolsas .NET
 
 Para criação da base de dados, utilizar o SQL database.sql em um banco de dados SQL Server.
 
-Caso deseje utilizar Docker, recomendo os seguinte tutorial:
+Caso deseje utilizar Docker, recomendo o seguinte tutorial:
 https://balta.io/blog/sql-server-docker
 
 Para realização dos testes com a API, disponibilizado uma coleção do Postman, com as chamadas organizadas por tipo e pasta.
